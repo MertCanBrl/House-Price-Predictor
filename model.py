@@ -8,7 +8,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 from scipy.stats import zscore
 
 # 1. Veri yükleme veya sentetik üretim
-def load_or_generate_data(filepath="Housing.csv"):
+def load_or_generate_data(filepath="HousingPrice.csv"):
     try:
         data = pd.read_csv(filepath)
         print(f"Veri dosyası yüklendi: {filepath}")

@@ -7,7 +7,7 @@ def save_model():
     Train and save the model, scaler, and feature names as pickle files
     """
     print("Loading data...")
-    data = load_or_generate_data("Housing.csv")  # Dosya yoksa sentetik veri üretir
+    data = load_or_generate_data("HousingPrice.csv")  # Dosya yoksa sentetik veri üretir
 
     print("Preprocessing data...")
     X_train, X_test, y_train, y_test, scaler, feature_names = preprocess_data(data)
