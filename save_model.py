@@ -3,19 +3,15 @@ import os
 from model import load_or_generate_data, preprocess_data, train_model
 
 def save_model():
-    """
-    Train and save the model, scaler, and feature names as pickle files
-    """
     print("Loading data...")
-    data = load_or_generate_data("HousingPrice.csv")  # Dosya yoksa sentetik veri üretir
+    data = load_or_generate_data("HousingPrice.csv")
 
     print("Preprocessing data...")
-    X_train, X_test, y_train, y_test, scaler, feature_names = preprocess_data(data)
+    X_train, X_test, y_train, y_test, scaler, feature_names, scaler_city, scaler_district = preprocess_data(data)
 
     print("Training model...")
     model = train_model(X_train, y_train)
 
-    # Save directory
     os.makedirs("models", exist_ok=True)
 
     with open("models/house_price_model.pkl", "wb") as f:
@@ -29,6 +25,14 @@ def save_model():
     with open("models/feature_names.pkl", "wb") as f:
         pickle.dump(feature_names, f)
     print("✅ Feature names saved to models/feature_names.pkl")
+
+    with open("models/city_scaler.pkl", "wb") as f:
+        pickle.dump(scaler_city, f)
+    print("✅ City scaler saved to models/city_scaler.pkl")
+
+    with open("models/district_scaler.pkl", "wb") as f:
+        pickle.dump(scaler_district, f)
+    print("✅ District scaler saved to models/district_scaler.pkl")
 
     return True
 
