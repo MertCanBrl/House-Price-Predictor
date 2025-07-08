@@ -121,28 +121,38 @@ def predict_house_price(model, scaler, input_dict, feature_columns, city_avg_pri
     df = pd.DataFrame([input_dict])
     df["furnishingstatus"] = df["furnished"].map({"Evet": "furnished", "Hayır": "unfurnished"})
 
-    city_log_price = np.log1p(city_avg_price_map.get(df["city"].iloc[0], city_avg_price_map.mean()))
+    # Şehir ve ilçe log fiyatlarının hesaplanması (dict'e mean uygulanamaz hatası giderildi)
+    default_city_price = np.mean(list(city_avg_price_map.values()))
+    city_log_price = np.log1p(city_avg_price_map.get(df["city"].iloc[0], default_city_price))
     df["city_encoded"] = scaler_city.transform([[city_log_price]]) * 0.000001
-    district_log_price = np.log1p(district_avg_price_map.get(df["district"].iloc[0], district_avg_price_map.mean()))
+
+    default_district_price = np.mean(list(district_avg_price_map.values()))
+    district_log_price = np.log1p(district_avg_price_map.get(df["district"].iloc[0], default_district_price))
     df["district_encoded"] = scaler_district.transform([[district_log_price]]) * 0.5
 
+    # Sayısal dönüşümler
     df["area"] = np.log1p(df["area"])
     df["building_age"] = np.log1p(df["building_age"] + 1)
     df["floor"] = np.log1p(df["floor"] + 1)
     df["bedrooms"] = pd.to_numeric(df["bedrooms"], errors="coerce")
     df["log_bedrooms"] = np.log1p(df["bedrooms"])
 
+    # Yeni öznitelikler
     df["area_x_bed"] = df["area"] * df["bedrooms"]
     df["room_density"] = df["area"] / (df["bedrooms"] + 0.1)
     df["floor_x_age"] = df["floor"] * df["building_age"]
     df["area_per_floor"] = df["area"] / (df["floor"] + 1)
 
+    # Kategorik değişkenleri one-hot encode et
     df = pd.get_dummies(df)
+
+    # Eksik sütunları doldur
     missing_cols = [col for col in feature_columns if col not in df.columns]
     if missing_cols:
         filler_df = pd.DataFrame(0, index=df.index, columns=missing_cols)
         df = pd.concat([df, filler_df], axis=1)
 
+    # Opsiyonel: ağırlıklı sütunlar
     if "balcony_Var" in df.columns:
         df["balcony_var_weighted"] = df["balcony_Var"] * 10
     if "elevator_Var" in df.columns:
@@ -150,10 +160,12 @@ def predict_house_price(model, scaler, input_dict, feature_columns, city_avg_pri
     if "furnishingstatus_furnished" in df.columns:
         df["furnished_weighted"] = df["furnishingstatus_furnished"] * 10
 
+    # Sıralama
     df = df[feature_columns]
-    df = pd.DataFrame(df, columns=feature_columns)  # Sıralama ve sütun adı uyumu
-    scaled = scaler.transform(df)  # UYARI KALKAR
+    df = pd.DataFrame(df, columns=feature_columns)
 
+    # Ölçeklendirme ve tahmin
+    scaled = scaler.transform(df)
     pred_log = model.predict(scaled)[0]
     return np.expm1(pred_log)
 
